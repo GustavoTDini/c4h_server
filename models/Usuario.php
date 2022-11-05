@@ -3,11 +3,12 @@
 namespace app\models;
 
 use Yii;
+use yii\base\Exception;
 
 /**
  * This is the model class for table "t_c4h_usuario".
  *
- * @property string $id_usuario
+ * @property int $id_usuario
  * @property string $nm_login
  * @property string|null $nm_email
  * @property string $vl_senha
@@ -49,16 +50,14 @@ class Usuario extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['id_usuario', 'nm_login', 'vl_senha'], 'required'],
+            [['nm_login', 'vl_senha'], 'required'],
             [['st_admin', 'st_doador', 'st_assinante', 'st_colaborador', 'st_voluntario'], 'integer'],
             [['dt_nascimento', 'dt_criacao'], 'safe'],
             [['fl_foto'], 'string'],
-            [['id_usuario'], 'string', 'max' => 40],
             [['nm_login'], 'string', 'max' => 30],
             [['nm_email', 'vl_senha', 'nm_razao_social', 'nm_nome', 'vl_url'], 'string', 'max' => 100],
             [['vl_cpf'], 'string', 'max' => 11],
             [['vl_cnpj'], 'string', 'max' => 14],
-            [['id_usuario'], 'unique'],
             [['nm_login'], 'unique'],
             [['vl_cpf'], 'unique'],
             [['vl_cnpj'], 'unique'],
@@ -89,6 +88,25 @@ class Usuario extends \yii\db\ActiveRecord
             'dt_criacao' => 'Dt Criacao',
             'fl_foto' => 'Fl Foto',
         ];
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function beforeSave($insert) {
+        if ($this->isNewRecord) {
+            $this->vl_senha = Yii::$app->getSecurity()->generatePasswordHash($this->vl_senha);
+            $this->dt_criacao = date('Y-m-d H:i:s');
+        }
+
+        return parent::beforeSave($insert);
+    }
+
+    public function afterFind()
+    {
+        $this->vl_senha = '';
+
+        parent::afterFind();
     }
 
     /**
